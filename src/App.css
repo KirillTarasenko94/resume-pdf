@@ -1,0 +1,82 @@
+.resume-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box; /* Учитываем padding в размерах контейнера */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resume-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Увеличены отступы между полями */
+    width: 50%; /* Ограничиваем ширину формы, можно уменьшить или увеличить */
+    margin: 0 auto; /* Центрируем форму */
+}
+
+.resume-form label {
+    font-weight: bold;
+    margin-bottom: 5px; /* Отступ снизу от label */
+}
+
+.resume-form input,
+.resume-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box; /* Учитываем padding в общей ширине элемента */
+}
+
+.resume-form textarea {
+    resize: vertical; /* Разрешаем изменять размер textarea по вертикали */
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Стили для добавленных секций: блоков с опытом работы и образования */
+.work-experience,
+.education-history {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.work-experience label,
+.education-history label {
+    margin-bottom: 5px;
+}
+
+button[type="button"] {
+    margin-top: 10px;
+}
+
+button[type="button"]:last-of-type {
+    margin-top: 20px;
+}
+
+/* Добавим отступы и изменение порядка в случае, если экран слишком маленький */
+@media (max-width: 768px) {
+    .resume-form {
+        width: 90%; /* Сделаем форму шире на мобильных устройствах */
+    }
+}
