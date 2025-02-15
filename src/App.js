@@ -6,7 +6,7 @@ function App() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: "+353",
     address: "",
     skills: "",
     Languages: "",
@@ -21,8 +21,22 @@ function App() {
     graduationYear: "",
   });
 
+  // Функция для проверки наличия кириллических символов (русский/украинский текст)
+  const containsCyrillic = (text) => {
+    const cyrillicRegex = /[А-Яа-яЁёІіЇїЄєҐґ]/;
+    return cyrillicRegex.test(text);  // Возвращает true, если есть кириллица
+  };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Проверяем, есть ли кириллица в значении поля
+    if (containsCyrillic(value)) {
+      alert("Пожалуйста, используйте только английские буквы.");
+      return;  // Останавливаем обновление состояния, если есть кириллица
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   // Добавить опыт работы
@@ -79,13 +93,12 @@ function App() {
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica");
-    doc.setFontSize(14);
 
     let yPosition = 5;
-    const margin = 2;  // Отступы
+    const margin = 10;  // Отступы
 
-    // Функция для добавления текста в PDF с меньшими отступами
-    const addTextToPDF = (text, fontSize = 12) => {
+    // Функция для добавления текста в PDF с корректными отступами
+    const addTextToPDF = (text, fontSize = 12, align = 'left') => {
       doc.setFontSize(fontSize);
 
       // Проверка, помещается ли текст на странице
@@ -94,42 +107,70 @@ function App() {
         yPosition = margin;
       }
 
-      doc.text(text, margin, yPosition);
-      yPosition += fontSize - 2;  // Уменьшаем отступы между строками
+      const pageWidth = doc.internal.pageSize.width;
+      const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
+      let xPosition;
+
+      // Выравнивание по центру для заголовков и по левому краю для обычного текста
+      if (align === 'center') {
+        xPosition = (pageWidth - textWidth) / 2; // Выравниваем по центру
+      } else {
+        xPosition = margin; // По левому краю
+      }
+
+      doc.text(text, xPosition, yPosition);
+      yPosition += fontSize - 1;  // Увеличиваем отступы между строками
     };
 
     // Добавление данных с более близкими отступами
-    addTextToPDF(formData.name, 14);
-    addTextToPDF(formData.address, 10);
-    addTextToPDF(formData.email, 10);
-    addTextToPDF(formData.phone, 10);
-    yPosition += 1; // Немного отступаем от последней строки
+    addTextToPDF(formData.name, 14, 'left');
+    addTextToPDF(formData.address, 10, 'left');
+    addTextToPDF(formData.email, 10, 'left');
+    addTextToPDF(formData.phone, 10, 'left');
+    yPosition -= 1; // Немного отступаем от последней строки
 
-    addTextToPDF("Work Experience:", 14);
+    doc.setFont("helvetica", "bold");  // Устанавливаем жирный шрифт для заголовков
+    addTextToPDF("Work Experience:", 18, 'center');
+    doc.setFont("helvetica", "normal");  // Возвращаем нормальный шрифт для остальных данных
     formData.workExperience.forEach((exp) => {
-      addTextToPDF(`Job Title: ${exp.jobTitle}`);
-      addTextToPDF(`Company: ${exp.companyName}`);
-      addTextToPDF(`Period: ${exp.workPeriod}`);
-      addTextToPDF("Experience Details:", 14);
+      // Жирный шрифт для Job Title (без самого слова "Job Title:")
+      doc.setFont("helvetica", "bold");
+      addTextToPDF(exp.jobTitle, 12, 'left');
+
+      // Обычный шрифт для остального текста
+      doc.setFont("helvetica", "normal");
+      addTextToPDF(`Company: ${exp.companyName}`, 12, 'left');
+      addTextToPDF(`Period: ${exp.workPeriod}`, 12, 'left');
+      
+      // Убираем метку "Experience Details:" и сразу выводим сам опыт
       const expText = doc.splitTextToSize(exp.experienceDetails, 180);
-      expText.forEach(line => addTextToPDF(line, 10));  // Добавляем каждую строку текста
+      expText.forEach(line => addTextToPDF(line, 10, 'left')); // Выводим текст опыта без заголовка
     });
 
-    addTextToPDF("Skills:", 14);
-    const skillsText = doc.splitTextToSize(formData.skills, 180);
-    skillsText.forEach(line => addTextToPDF(line));
-
-    addTextToPDF("Education:", 14);
+    doc.setFont("helvetica", "bold");  // Устанавливаем жирный шрифт для заголовков
+    addTextToPDF("Education:", 18, 'center');
+    doc.setFont("helvetica", "normal");
     formData.educationList.forEach((edu) => {
-      addTextToPDF(`School Name: ${edu.schoolName}`);
-      addTextToPDF(`Degree: ${edu.degree}`);
-      addTextToPDF(`Graduation Year: ${edu.graduationYear}`);
-      yPosition += 4; // Уменьшаем отступы между записями
+      addTextToPDF(`${edu.schoolName}`, 12, 'left');  // Выводим только название школы
+      addTextToPDF(`${edu.degree}`, 12, 'left');  // Выводим только степень
+      addTextToPDF(`${edu.graduationYear}`, 12, 'left');  // Выводим только год выпуска
+      yPosition -= 1; // Уменьшаем отступы между записями
     });
 
-    addTextToPDF("Languages:", 14);
+    // Теперь "Skills" идут после "Work Experience" и "Education"
+    doc.setFont("helvetica", "bold");
+    addTextToPDF("Skills:", 18, 'center');
+    doc.setFont("helvetica", "normal");
+    const skillsText = doc.splitTextToSize(formData.skills, 180);
+    skillsText.forEach(line => addTextToPDF(line, 12, 'left'));
+    yPosition -= 10;
+
+    // "Languages" идут в самом конце
+    doc.setFont("helvetica", "bold");
+    addTextToPDF("Languages:", 18, 'center');
+    doc.setFont("helvetica", "normal");
     const languagesText = doc.splitTextToSize(formData.Languages, 180);
-    languagesText.forEach(line => addTextToPDF(line));
+    languagesText.forEach(line => addTextToPDF(line, 12, 'left'));
 
     doc.save("Resume.pdf");
   };
